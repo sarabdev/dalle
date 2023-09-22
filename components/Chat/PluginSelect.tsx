@@ -1,51 +1,61 @@
-import { ChangeEvent, FC, useContext, useEffect, useRef ,useState} from 'react';
+import {
+  ChangeEvent,
+  FC,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import { useTranslation } from 'next-i18next';
-import Modal from './Modal';
+
 import { DEFAULT_SYSTEM_PROMPT } from '@/utils/app/const';
+
 import HomeContext from '@/pages/api/home/home.context';
+
+import Modal from './Modal';
+
 // import { Plugin } from '@/types/plugin';
 
 interface Props {
-  lightMode:string
+  lightMode: string;
   // onPluginChange: (plugin: Plugin) => void;
   // onKeyDown: (e: React.KeyboardEvent<HTMLSelectElement>) => void;
 }
 
 export const PluginSelect: FC<Props> = ({
-  lightMode
+  lightMode,
   // onPluginChange,
   // onKeyDown,
 }) => {
   const {
-    state: {
-      selectedConversation
-    },
+    state: { selectedConversation },
     handleUpdateConversation,
     dispatch: homeDispatch,
   } = useContext(HomeContext);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { t } = useTranslation('chat');
-  const [plugin,setPlugin]=useState({id:'', name:''})
-  const [value,setValue]=useState('')
-  const PluginList=[
+  const [plugin, setPlugin] = useState({ id: '', name: '' });
+  const [value, setValue] = useState('');
+  const [showFileSelection, setShowFileSelection] = useState(false);
+  const PluginList = [
     // {
     //   id:1,
     //   name:"Image"
     // },
     {
-      id:2,
-      name:"File"
+      id: '2',
+      name: 'File',
     },
     {
-      id:"3",
-      name:"Text"
-    }
-  ]
+      id: '3',
+      name: 'Text',
+    },
+  ];
   const selectRef = useRef<HTMLSelectElement>(null);
-  const [isPrepareText,setIsPrepareText]=useState(false)
-  
+  const [isPrepareText, setIsPrepareText] = useState(false);
+
   useEffect(() => {
     if (selectedConversation && selectedConversation.prompt) {
       setValue(selectedConversation.prompt);
@@ -55,8 +65,14 @@ export const PluginSelect: FC<Props> = ({
   }, [selectedConversation]);
   const handleOptionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedValue = event.target.value;
-    if(selectedValue=='3'){
-      setIsPrepareText(true)
+    if (selectedValue == '3') {
+      setIsPrepareText(true);
+      setShowFileSelection(false);
+    } else if (selectedValue == '2') {
+      setShowFileSelection(true);
+      setIsPrepareText(true);
+    } else {
+      setShowFileSelection(false);
     }
   };
 
@@ -65,58 +81,61 @@ export const PluginSelect: FC<Props> = ({
       selectRef.current.focus();
     }
   }, []);
-
-
-  async function convertPdfToText(file:File) {
+  async function convertPdfToText(file: File) {
     try {
-      console.log(file)
+      console.log(file);
       //const fileURL = URL.createObjectURL(file);
       //console.log(fileURL)
       const formData = new FormData();
       formData.append('file', file);
-      console.log(formData)
-       const data = Object.fromEntries(formData.entries());
-       console.log(data);
+      console.log(formData);
+      const data = Object.fromEntries(formData.entries());
+      console.log(data);
       const controller = new AbortController();
-   const response = await fetch('/api/getTextFromPdf', {
-    method: 'POST',
-    // headers:{
-    //   'Content-Type': 'multipart/form-data ',
-    // },
-    body: formData     
-   });
-   const result=await response.json();
-  if(!result.error)
-      if(selectedConversation)
-      {
-      handleUpdateConversation(selectedConversation,{key:'prompt',value:result.text})
-      setValue(result.text)  
-    }
+      const response = await fetch('/api/getTextFromPdf', {
+        method: 'POST',
+        // headers:{
+        //   'Content-Type': 'multipart/form-data ',
+        // },
+        body: formData,
+      });
+      const result = await response.json();
+      if (!result.error)
+        if (selectedConversation) {
+          handleUpdateConversation(selectedConversation, {
+            key: 'prompt',
+            value: result.text,
+          });
+          setValue(result.text);
+        }
     } catch (error) {
       console.error('Error converting PDF to text:', error);
     }
   }
 
-  const handleUploadFile=(event: ChangeEvent<HTMLInputElement>)=>{
+  const handleUploadFile = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && file.type === 'application/pdf') {
       setSelectedFile(file);
-      convertPdfToText(file)
+      convertPdfToText(file);
     } else {
       setSelectedFile(null);
       alert('Please select a valid PDF file.');
     }
-  }
+  };
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-  const updatedContent=e.target.value;
-  setValue(updatedContent)
-  if(selectedConversation)
-  handleUpdateConversation(selectedConversation,{key:'prompt',value:updatedContent})
-  }
+    const updatedContent = e.target.value;
+    setValue(updatedContent);
+    if (selectedConversation)
+      handleUpdateConversation(selectedConversation, {
+        key: 'prompt',
+        value: updatedContent,
+      });
+  };
   return (
     <>
-   {isPrepareText && <div className="z-100 fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"  
-        >
+      {isPrepareText && (
+        <div className="z-100 fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="fixed inset-0 z-10 overflow-hidden">
             <div className="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
               <div
@@ -125,50 +144,56 @@ export const PluginSelect: FC<Props> = ({
               />
 
               <div
-               style={{
-               backgroundColor: lightMode=="light" ? "white" : "black",
-               color: lightMode=="light" ? "black" : "white",
-                }}                
+                style={{
+                  backgroundColor: lightMode == 'light' ? 'white' : 'black',
+                  color: lightMode == 'light' ? 'black' : 'white',
+                }}
                 className="dark:border-netural-400 inline-block max-h-[400px] transform overflow-y-auto rounded-lg border border-gray-300 bg-white px-4 pt-5 pb-4 text-left align-bottom shadow-xl transition-all dark:bg-[#202123] sm:my-8 sm:max-h-[600px] sm:w-full sm:max-w-lg sm:p-6 sm:align-middle"
                 role="dialog"
               >
                 <div className="mb-4 text-2xl">Prepare AI</div>
-                <input type='file' accept=".pdf" onChange={handleUploadFile}/>
-                  <textarea
+                {showFileSelection && (
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    onChange={handleUploadFile}
+                  />
+                )}
+                <textarea
                   onChange={handleChange}
                   rows={20}
-                   style={{
-                   backgroundColor: lightMode=="light" ? "white" : "black",
-                    color: lightMode=="light" ? "black" : "white",
-                    borderColor: lightMode=="light" ? "black" : "white"
-                    }} 
-                    className="mt-2 w-full rounded-lg border border-neutral-500 px-4 py-2 text-neutral-900 shadow focus:outline-none dark:border-neutral-800 dark:border-opacity-50 dark:bg-[#40414F] dark:text-neutral-100"
-                 value={value}
-                  />
+                  style={{
+                    backgroundColor: lightMode == 'light' ? 'white' : 'black',
+                    color: lightMode == 'light' ? 'black' : 'white',
+                    borderColor: lightMode == 'light' ? 'black' : 'white',
+                  }}
+                  className="mt-2 w-full rounded-lg border border-neutral-500 px-4 py-2 text-neutral-900 shadow focus:outline-none dark:border-neutral-800 dark:border-opacity-50 dark:bg-[#40414F] dark:text-neutral-100"
+                  value={value}
+                />
 
-                 
-<button
+                <button
                   type="button"
-                  onClick={()=>setIsPrepareText(false)}
+                  onClick={() => setIsPrepareText(false)}
                   className="mt-6 w-full rounded-lg border border-neutral-500 px-4 py-2 text-neutral-900 shadow hover:bg-neutral-100 focus:outline-none dark:border-neutral-800 dark:border-opacity-50 dark:bg-white dark:text-black dark:hover:bg-neutral-300"
                 >
                   {t('Save')}
                 </button>
-                
-                </div>
-
-               
               </div>
             </div>
-          </div> }
-        
-    <div className="flex flex-col"  style={{
-      backgroundColor: lightMode=="light" ? "white" : "black",
-      color: lightMode=="light" ? "black" : "white",
-      borderColor: lightMode=="light" ? "black" : "white"
-    }}>
-      <div className="mb-1 w-full rounded border border-neutral-200 bg-transparent pr-2  dark:border-neutral-600 ">
-        {/* <select
+          </div>
+        </div>
+      )}
+
+      <div
+        className="flex flex-col"
+        style={{
+          backgroundColor: lightMode == 'light' ? 'white' : 'black',
+          color: lightMode == 'light' ? 'black' : 'white',
+          borderColor: lightMode == 'light' ? 'black' : 'white',
+        }}
+      >
+        <div className="mb-1 w-full rounded border border-neutral-200 bg-transparent pr-2  dark:border-neutral-600 ">
+          {/* <select
           ref={selectRef}
           className="w-full cursor-pointer bg-transparent p-2"
           placeholder={t('Select a plugin') || ''}
@@ -192,33 +217,39 @@ export const PluginSelect: FC<Props> = ({
           >
             ChatGPT
           </option> */}
-<select  style={{
-          backgroundColor: lightMode=="light" ? "white" : "black",
-          color: lightMode=="light" ? "black" : "white",
-          borderColor: lightMode=="light" ? "black" : "white"
-        }}  className="w-full cursor-pointer  p-2"
- onChange={handleOptionChange}>
-        <option  style={{
-          backgroundColor: lightMode=="light" ? "white" : "black",
-          color: lightMode=="light" ? "black" : "white",
-          borderColor: lightMode=="light" ? "black" : "white"
-        }} value="">Prepare AI:</option>
-        {PluginList.map((option, index) => (
-          <option 
-          style={{
-            backgroundColor: lightMode=="light" ? "white" : "black",
-            color: lightMode=="light" ? "black" : "white",
-            borderColor: lightMode=="light" ? "black" : "white"
-          }}
-          key={index} value={option.id}>
-            {option.name}
-          </option>
-        ))}
-      </select>
-
-
-
-
+          <select
+            style={{
+              backgroundColor: lightMode == 'light' ? 'white' : 'black',
+              color: lightMode == 'light' ? 'black' : 'white',
+              borderColor: lightMode == 'light' ? 'black' : 'white',
+            }}
+            className="w-full cursor-pointer  p-2"
+            onChange={handleOptionChange}
+          >
+            <option
+              style={{
+                backgroundColor: lightMode == 'light' ? 'white' : 'black',
+                color: lightMode == 'light' ? 'black' : 'white',
+                borderColor: lightMode == 'light' ? 'black' : 'white',
+              }}
+              value=""
+            >
+              Prepare AI:
+            </option>
+            {PluginList.map((option, index) => (
+              <option
+                style={{
+                  backgroundColor: lightMode == 'light' ? 'white' : 'black',
+                  color: lightMode == 'light' ? 'black' : 'white',
+                  borderColor: lightMode == 'light' ? 'black' : 'white',
+                }}
+                key={index}
+                value={option.id}
+              >
+                {option.name}
+              </option>
+            ))}
+          </select>
 
           {/* {PluginList.map((plugin) => (
             
@@ -231,8 +262,8 @@ export const PluginSelect: FC<Props> = ({
             </option>
           ))}
         </select> */}
+        </div>
       </div>
-    </div>
     </>
   );
 };
