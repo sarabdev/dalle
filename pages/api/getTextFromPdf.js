@@ -1,10 +1,8 @@
-// Go to your terminal and install multer and fs
-// npm install multer fs
 import fs from 'fs';
 import multer from 'multer';
 import pdf from 'pdf-parse';
 
-const upload = multer({ dest: 'uploads/' });
+const upload = multer({ storage: multer.memoryStorage() });
 
 export const config = {
   api: {
@@ -20,15 +18,11 @@ export default async function handler(req, res) {
     }
 
     try {
-      const data = fs.readFileSync(req.file.path);
-      console.log(data);
-      const converted = await pdf(data);
+      console.log(req.file);
+      const converted = await pdf(req.file.buffer);
       // do something with the data
       console.log(converted.text);
       res.status(200).json({ error: false, text: converted.text.trim() });
-
-      // delete the file after reading
-      fs.unlinkSync(req.file.path);
     } catch (error) {
       console.error(`Error reading file from disk: ${error}`);
       return res.status(500).json({ error: true });

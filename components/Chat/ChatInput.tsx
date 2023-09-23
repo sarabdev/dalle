@@ -6,11 +6,6 @@ import {
   IconRepeat,
   IconSend,
 } from '@tabler/icons-react';
-import { SystemPrompt } from './SystemPrompt';
-import FavIcon from "../../components/gif-white.gif";
-import Image from 'next/image';
-import Dropdown from 'react-dropdown';
-import 'react-dropdown/style.css';
 import {
   KeyboardEvent,
   MutableRefObject,
@@ -20,8 +15,11 @@ import {
   useRef,
   useState,
 } from 'react';
+import Dropdown from 'react-dropdown';
+import 'react-dropdown/style.css';
 
 import { useTranslation } from 'next-i18next';
+import Image from 'next/image';
 
 import { Message } from '@/types/chat';
 import { Plugin } from '@/types/plugin';
@@ -29,10 +27,13 @@ import { Prompt } from '@/types/prompt';
 
 import HomeContext from '@/pages/api/home/home.context';
 
+import FavIcon from '../../components/gif-white.gif';
+
+import Modal from './Modal';
 import { PluginSelect } from './PluginSelect';
 import { PromptList } from './PromptList';
+import { SystemPrompt } from './SystemPrompt';
 import { VariableModal } from './VariableModal';
-import Modal from './Modal';
 
 interface Props {
   onSend: (message: Message, plugin: Plugin | null) => void;
@@ -41,6 +42,7 @@ interface Props {
   stopConversationRef: MutableRefObject<boolean>;
   textareaRef: MutableRefObject<HTMLTextAreaElement | null>;
   showScrollDownButton: boolean;
+  userChat: (chat: string) => void;
 }
 
 export const ChatInput = ({
@@ -50,11 +52,20 @@ export const ChatInput = ({
   stopConversationRef,
   textareaRef,
   showScrollDownButton,
+  userChat,
 }: Props) => {
   const { t } = useTranslation('chat');
 
   const {
-    state: { selectedConversation, messageIsStreaming, prompts, lightMode, showPluginSelect,isAutoHide },
+    state: {
+      selectedConversation,
+      messageIsStreaming,
+      prompts,
+      lightMode,
+      showPluginSelect,
+      isAutoHide,
+      selectedChat,
+    },
     offPluginSelect,
     onPluginSelect,
     dispatch: homeDispatch,
@@ -70,17 +81,22 @@ export const ChatInput = ({
   const [plugin, setPlugin] = useState<Plugin | null>(null);
   const [prompt, setPrompt] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  // const [selectedChat, setSelectedChat] = useState('');
+
+  const handleOptionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedValue = event.target.value;
+    homeDispatch({ field: 'selectedChat', value: selectedValue });
+    userChat(selectedValue);
+  };
 
   const promptListRef = useRef<HTMLUListElement | null>(null);
 
-  const handleMenus=()=>{
-
-    if(isAutoHide){
-    homeDispatch({ field: 'showChatbar', value:false });
-    homeDispatch({ field: 'showPromptbar', value:false });
+  const handleMenus = () => {
+    if (isAutoHide) {
+      homeDispatch({ field: 'showChatbar', value: false });
+      homeDispatch({ field: 'showPromptbar', value: false });
     }
-
-  }
+  };
   const filteredPrompts = prompts.filter((prompt) =>
     prompt.name.toLowerCase().includes(promptInputValue.toLowerCase()),
   );
@@ -113,7 +129,14 @@ export const ChatInput = ({
       return;
     }
 
-    onSend({ role: 'user', content }, plugin);
+    onSend(
+      {
+        role: 'user',
+        content,
+        type: selectedChat === 'Text' ? 'div' : 'image',
+      },
+      plugin,
+    );
     setContent('');
     setPlugin(null);
 
@@ -183,11 +206,9 @@ export const ChatInput = ({
       handleSend();
     } else if (e.key === '/' && e.metaKey) {
       e.preventDefault();
-      if(showPluginSelect)
-      offPluginSelect()
-    else
-    onPluginSelect()
-     // setShowPluginSelect(!showPluginSelect);
+      if (showPluginSelect) offPluginSelect();
+      else onPluginSelect();
+      // setShowPluginSelect(!showPluginSelect);
     }
   };
 
@@ -256,6 +277,7 @@ export const ChatInput = ({
       const message: Message = {
         role: 'user',
         content: newContent,
+        type: selectedChat === 'Text' ? 'div' : 'image',
       };
       // Now you can use the message object as needed
       onSend(message, plugin);
@@ -284,11 +306,8 @@ export const ChatInput = ({
     }
   }, [content]);
 
-  
-const options = [
-  'one', 'two', 'three'
-];
-const defaultOption = options[0];
+  const options = ['one', 'two', 'three'];
+  const defaultOption = options[0];
 
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
@@ -308,47 +327,51 @@ const defaultOption = options[0];
   }, []);
 
   return (
-    <div  style={{
-      backgroundColor: lightMode=="light" ? "white" : "black",
-      color: lightMode=="light" ? "black" : "white",
-      borderColor: lightMode=="light" ? "black" : "white"
-    }}  className="absolute bottom-0 left-0 w-full border-transparent  from-transparent via-white to-white pt-6 dark:border-white/20 dark:via-[#343541] dark:to-[#343541] md:pt-2">
-         {/* {showPluginSelect &&
+    <div
+      style={{
+        backgroundColor: lightMode == 'light' ? 'white' : 'black',
+        color: lightMode == 'light' ? 'black' : 'white',
+        borderColor: lightMode == 'light' ? 'black' : 'white',
+      }}
+      className="absolute bottom-0 left-0 w-full border-transparent  from-transparent via-white to-white pt-6 dark:border-white/20 dark:via-[#343541] dark:to-[#343541] md:pt-2"
+    >
+      {/* {showPluginSelect &&
            <Dropdown options={options}  value={defaultOption} placeholder="Select an option" />} */}
-      <Modal/>
+      <Modal />
 
-      <div
-       className="stretch mx-2 mt-4 flex flex-row gap-3 last:mb-2 md:mx-4 md:mt-[52px] md:last:mb-6 lg:mx-auto lg:max-w-3xl">
-       
-
-    
-
+      <div className="stretch mx-2 mt-4 flex flex-row gap-3 last:mb-2 md:mx-4 md:mt-[52px] md:last:mb-6 lg:mx-auto lg:max-w-3xl">
         <div
-        style={{
-          backgroundColor: lightMode=="light" ? "white" : "black",
-          color: lightMode=="light" ? "black" : "white",
-          borderColor: lightMode=="light" ? "black" : "white",
-          borderRadius:0,
-          borderBottomWidth: '1px',
-          borderBottomColor: 'white', 
-          borderBottomStyle: 'solid', 
-          minHeight: '5px',
-        }}  className="relative mx-2 flex w-full flex-grow flex-col rounded-md  bg-white shadow-[0_0_10px_rgba(0,0,0,0.10)] dark:border-gray-900/50 dark:bg-[#40414F] dark:text-white dark:shadow-[0_0_15px_rgba(0,0,0,0.10)] sm:mx-4">
+          style={{
+            backgroundColor: lightMode == 'light' ? 'white' : 'black',
+            color: lightMode == 'light' ? 'black' : 'white',
+            borderColor: lightMode == 'light' ? 'black' : 'white',
+            borderRadius: 0,
+            borderBottomWidth: '1px',
+            borderBottomColor: 'white',
+            borderBottomStyle: 'solid',
+            minHeight: '5px',
+          }}
+          className="relative mx-2 flex w-full flex-grow flex-col rounded-md  bg-white shadow-[0_0_10px_rgba(0,0,0,0.10)] dark:border-gray-900/50 dark:bg-[#40414F] dark:text-white dark:shadow-[0_0_15px_rgba(0,0,0,0.10)] sm:mx-4"
+        >
           <button
             className="absolute left-2 top-2 rounded-sm p-1 text-neutral-800 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
-            onClick={() => showPluginSelect?offPluginSelect():onPluginSelect()}
+            onClick={() =>
+              showPluginSelect ? offPluginSelect() : onPluginSelect()
+            }
             onKeyDown={(e) => {}}
           >
-              <Image width={20} style={{background:"transparent"}} height={20} src={lightMode=="light"?"/gif-black.gif":"/gif-white.gif"} alt="My Image" />
-
+            <Image
+              width={20}
+              style={{ background: 'transparent' }}
+              height={20}
+              src={lightMode == 'light' ? '/gif-black.gif' : '/gif-white.gif'}
+              alt="My Image"
+            />
           </button>
-          
-
-          
           {showPluginSelect && (
-            <div   className="absolute left-0 bottom-14 rounded bg-white dark:bg-[#343541]">
+            <div className="absolute left-0 bottom-14 rounded bg-white dark:bg-[#343541]">
               <PluginSelect
-              lightMode={lightMode}
+                lightMode={lightMode}
                 // plugin={plugin}
                 // onKeyDown={(e: any) => {
                 //   if (e.key === 'Escape') {
@@ -367,12 +390,14 @@ const defaultOption = options[0];
                 // }}
               />
             </div>
-          )} 
-
+          )}
           <textarea
             id="promptBarInput"
             ref={textareaRef}
-            onClick={()=>{handleMenus();offPluginSelect()}}
+            onClick={() => {
+              handleMenus();
+              offPluginSelect();
+            }}
             className="m-0 w-full resize-none border-0 bg-transparent p-0 py-2 pr-8 pl-10 text-black dark:bg-transparent dark:text-white md:py-3 md:pl-10"
             style={{
               outline: 'none',
@@ -395,16 +420,30 @@ const defaultOption = options[0];
             onChange={handleChange}
             onKeyDown={handleKeyDown}
           />
+          {/* Awais Added */}
 
-{/* <button
-            className="absolute right-(-10) top-2  rounded-full p-1 text-neutral-800 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
-            onClick={onScrollDownClick}
-          >
-            {showScrollDownButton && (
-              
-              <IconArrowDown size={18} />
-            )}
-          </button> */}
+          {!messageIsStreaming && (
+            <select
+              onChange={handleOptionChange}
+              defaultValue={selectedChat}
+              className="absolute right-[35px]  top-2  rounded-full p-1 bg-black  text-neutral-800   hover:text-neutral-900  dark:text-neutral-100 dark:hover:text-neutral-200"
+            >
+              <option
+                value="Text"
+                className="text-neutral-800  hover:bg-neutral-200 hover:text-neutral-900  dark:text-neutral-100 dark:hover:text-neutral-200"
+              >
+                Text
+              </option>
+              <option
+                value="Image"
+                className="text-neutral-800  hover:bg-neutral-200 hover:text-neutral-900 dark:text-neutral-100 dark:hover:text-neutral-200"
+              >
+                Image
+              </option>
+            </select>
+          )}
+
+          {/* Awais Added */}
           <button
             className="absolute right-2 top-2 rounded-sm p-1 text-neutral-800 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
             onClick={handleSend}
@@ -415,12 +454,8 @@ const defaultOption = options[0];
               <IconSend size={18} />
             )}
           </button>
-
-        
-
           {showScrollDownButton && (
-            <div
-             className="absolute bottom-12 left-100 right-7 lg:bottom-1 lg:-right-6">
+            <div className="absolute bottom-12 left-100 right-7 lg:bottom-1 lg:-right-6">
               <button
                 className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-300 text-gray-800 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-neutral-200"
                 onClick={onScrollDownClick}
@@ -429,25 +464,25 @@ const defaultOption = options[0];
               </button>
             </div>
           )}
-
           {showPromptList && filteredPrompts.length > 0 && (
             <div className="absolute bottom-12 w-full">
               <PromptList
                 activePromptIndex={activePromptIndex}
                 prompts={filteredPrompts}
                 onSelect={handleInitModal}
-                onMouseOver={(index)=>{
-                  setActivePromptIndex(index)
+                onMouseOver={(index) => {
+                  setActivePromptIndex(index);
                 }}
                 promptListRef={promptListRef}
               />
             </div>
           )}
-
           {isModalVisible && (
             <VariableModal
               prompt={filteredPrompts[activePromptIndex]}
-              variables={parseVariables(filteredPrompts[activePromptIndex].content)}
+              variables={parseVariables(
+                filteredPrompts[activePromptIndex].content,
+              )}
               onSubmit={handleSubmit}
               onClose={() => setIsModalVisible(false)}
             />
@@ -457,54 +492,60 @@ const defaultOption = options[0];
           selectedConversation &&
           selectedConversation.messages.length > 0 && (
             <button
+              style={{
+                backgroundColor: lightMode === 'light' ? 'white' : 'black',
+                color: lightMode === 'light' ? 'black' : 'white',
+                width: isHovered ? '30%' : '2.5rem',
+              }}
+              className="relative top-y0 left-0 right-0 mx-auto mb-3 flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white py-2 px-2 text-black hover:opacity-50 dark:border-neutral-600 dark:bg-[#343541] dark:text-white md:mb-0 md:mt-2"
+              onClick={onRegenerate}
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+            >
+              <div className="flex items-center">
+                <IconRepeat size={16} />
+                {isHovered && (
+                  <span className="ml-2 opacity-100 transition-opacity">
+                    {t('Regenerate response')}
+                  </span>
+                )}
+              </div>
+            </button>
+          )}
+        {messageIsStreaming && (
+          <button
             style={{
-              backgroundColor: lightMode === "light" ? "white" : "black",
-              color: lightMode === "light" ? "black" : "white",
-              width: isHovered ? "30%" : "2.5rem", 
+              backgroundColor: lightMode == 'light' ? 'white' : 'black',
+              color: lightMode == 'light' ? 'black' : 'white',
+              width: isHovered ? '30%' : '2.5rem',
             }}
             className="relative top-y0 left-0 right-0 mx-auto mb-3 flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white py-2 px-2 text-black hover:opacity-50 dark:border-neutral-600 dark:bg-[#343541] dark:text-white md:mb-0 md:mt-2"
-            onClick={onRegenerate}
+            onClick={handleStopConversation}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
           >
-            <div className="flex items-center">
-              <IconRepeat size={16} />
-              {isHovered && (
-                <span className="ml-2 opacity-100 transition-opacity">
-                  {t('Regenerate response')}
-                </span>
-              )}
-            </div>
-            </button>
-          )}
-           {messageIsStreaming && (
-          <button
-          style={{
-            backgroundColor: lightMode=="light" ? "white" : "black",
-            color: lightMode=="light" ? "black" : "white",
-            width: isHovered ? "30%" : "2.5rem", 
-          }} 
-          className="relative top-y0 left-0 right-0 mx-auto mb-3 flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white py-2 px-2 text-black hover:opacity-50 dark:border-neutral-600 dark:bg-[#343541] dark:text-white md:mb-0 md:mt-2"
-          onClick={handleStopConversation}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-          >
-   <IconPlayerStop size={16} /> {isHovered && (
-      <span className="ml-2 opacity-100 transition-opacity">
-        {t('Stop generating')}
-      </span>
-    )}          </button>
+            <IconPlayerStop size={16} />{' '}
+            {isHovered && (
+              <span className="ml-2 opacity-100 transition-opacity">
+                {t('Stop generating')}
+              </span>
+            )}{' '}
+          </button>
         )}
       </div>
-  
+
       <div
-       style={{
-        backgroundColor: lightMode=="light" ? "white" : "black",
-        color: lightMode=="light" ? "black" : "white",
-        borderColor: lightMode=="light" ? "black" : "white",
-        marginTop: (selectedConversation && selectedConversation?.messages?.length>0) ? 0 : 350,
-      }} 
-      className="px-3 pt-2 pb-3 text-center text-[12px] text-black/50 dark:text-white/50 md:px-4 md:pt-3 md:pb-6">
+        style={{
+          backgroundColor: lightMode == 'light' ? 'white' : 'black',
+          color: lightMode == 'light' ? 'black' : 'white',
+          borderColor: lightMode == 'light' ? 'black' : 'white',
+          marginTop:
+            selectedConversation && selectedConversation?.messages?.length > 0
+              ? 0
+              : 350,
+        }}
+        className="px-3 pt-2 pb-3 text-center text-[12px] text-black/50 dark:text-white/50 md:px-4 md:pt-3 md:pb-6"
+      >
         <a
           href="https://futurum.one/data-privacy/"
           target="_blank"
@@ -515,7 +556,7 @@ const defaultOption = options[0];
         </a>
         .{' '}
         {t(
-          "Futurum One stores data on your device, is compliant with GDPR, HIPAA, SOC 2 Type 2, and CCPA, and is powered by OpenAI.",
+          'Futurum One stores data on your device, is compliant with GDPR, HIPAA, SOC 2 Type 2, and CCPA, and is powered by OpenAI.',
         )}
       </div>
     </div>

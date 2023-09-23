@@ -10,24 +10,24 @@ import { Prompt } from '@/types/prompt';
 
 export interface HomeInitialState {
   apiKey: string;
-  isAutoHide:boolean;
+  isAutoHide: boolean;
   pluginKeys: PluginKey[];
   loading: boolean;
-  isGlobal:boolean;
-  showPluginSelect:boolean;
+  isGlobal: boolean;
+  showPluginSelect: boolean;
   lightMode: 'light' | 'dark';
   messageIsStreaming: boolean;
   modelError: ErrorMessage | null;
   models: OpenAIModel[];
   folders: FolderInterface[];
-  globalFolders:GlobalFolderInterface[];
-  folderColors:Color[];
+  globalFolders: GlobalFolderInterface[];
+  folderColors: Color[];
   conversations: Conversation[];
   selectedConversation: Conversation | undefined;
   currentMessage: Message | undefined;
   prompts: Prompt[];
-  globalPrompts:GlobalPrompt[];
-  filteredGlobalPrompts:Prompt[];
+  globalPrompts: GlobalPrompt[];
+  filteredGlobalPrompts: Prompt[];
   temperature: number;
   showChatbar: boolean;
   showPromptbar: boolean;
@@ -37,28 +37,31 @@ export interface HomeInitialState {
   defaultModelId: OpenAIModelID | undefined;
   serverSideApiKeyIsSet: boolean;
   serverSidePluginKeysSet: boolean;
+  userChat: string;
+  imgurl: string;
+  selectedChat: string;
 }
 
 export const initialState: HomeInitialState = {
-  apiKey: "" ,
-  isAutoHide:true,
+  apiKey: '',
+  isAutoHide: true,
   loading: false,
   isGlobal: false,
-  showPluginSelect:false,
+  showPluginSelect: false,
   pluginKeys: [],
   lightMode: 'light',
   messageIsStreaming: false,
   modelError: null,
   models: [],
   folders: [],
-  globalFolders:[],
+  globalFolders: [],
   conversations: [],
-  folderColors:[],
+  folderColors: [],
   selectedConversation: undefined,
   currentMessage: undefined,
   prompts: [],
-  globalPrompts:[],
-  filteredGlobalPrompts:[],
+  globalPrompts: [],
+  filteredGlobalPrompts: [],
   temperature: 1,
   showPromptbar: false,
   showChatbar: false,
@@ -68,4 +71,7 @@ export const initialState: HomeInitialState = {
   defaultModelId: undefined,
   serverSideApiKeyIsSet: false,
   serverSidePluginKeysSet: false,
+  userChat: '',
+  imgurl: '',
+  selectedChat: 'Text',
 };

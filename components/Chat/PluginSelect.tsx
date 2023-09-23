@@ -83,14 +83,14 @@ export const PluginSelect: FC<Props> = ({
   }, []);
   async function convertPdfToText(file: File) {
     try {
-      console.log(file);
+      // console.log(file);
       //const fileURL = URL.createObjectURL(file);
       //console.log(fileURL)
       const formData = new FormData();
       formData.append('file', file);
-      console.log(formData);
+      // console.log(formData);
       const data = Object.fromEntries(formData.entries());
-      console.log(data);
+      // console.log(data);
       const controller = new AbortController();
       const response = await fetch('/api/getTextFromPdf', {
         method: 'POST',
