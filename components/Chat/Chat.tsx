@@ -1,3 +1,12 @@
+import {
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
+} from '@chakra-ui/react';
 import { IconClearAll, IconSettings } from '@tabler/icons-react';
 import React, {
   MutableRefObject,

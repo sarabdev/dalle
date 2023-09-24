@@ -40,6 +40,7 @@ export interface HomeInitialState {
   userChat: string;
   imgurl: string;
   selectedChat: string;
+  showDemo: boolean;
 }
 
 export const initialState: HomeInitialState = {
@@ -74,4 +75,5 @@ export const initialState: HomeInitialState = {
   userChat: '',
   imgurl: '',
   selectedChat: 'Text',
+  showDemo: false,
 };

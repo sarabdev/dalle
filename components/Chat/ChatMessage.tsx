@@ -293,6 +293,7 @@ export const ChatMessage: FC<Props> = memo(
                           <p style={{ color: 'black' }}>{children}</p>
                         ) : (
                           <img
+                            style={{ objectFit: 'cover' }}
                             width="350px"
                             height="350px"
                             src={message.content}
