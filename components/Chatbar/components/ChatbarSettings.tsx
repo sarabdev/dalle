@@ -152,7 +152,7 @@ export const ChatbarSettings = () => {
               </Modal>
             </Box>
             <SidebarButton
-              text={t('Demo')}
+              text={t('Tutorials')}
               icon={<IconVideo size={18} />}
               onClick={() => onOpen()}
               lightMode={lightMode}
